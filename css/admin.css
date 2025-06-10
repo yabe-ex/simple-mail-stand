@@ -1,0 +1,9 @@
+.mail-list .stopped {
+    color: red;
+    border-color: red;
+}
+
+.mail-list .stopped:hover {
+    color: red;
+    border-color: red;
+}
