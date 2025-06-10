@@ -38,9 +38,6 @@ class SimpleMailStandFront {
     }
 
     function my_subscribe_form() {
-        // if (isset($_GET['unsubscribe']) && !empty($_GET['unsubscribe'])) {
-        //     return $this->show_unsubscribe_form();
-        // }
 ?>
         <div class="my-subscribe-wrapper">
             <h3>ニュースレター購読</h3>
@@ -55,17 +52,20 @@ class SimpleMailStandFront {
     }
 
     function my_unsubscribe_form() {
+        if (!isset($_GET['unsubscribe'])) {
+            return "<p>アクセス方法に誤りがあります。</p>";
+        }
+
         $email = sanitize_email($_GET['unsubscribe']);
 
-        // メールアドレスが有効でない場合
         if (!is_email($email)) {
             return '<div class="my-subscribe-wrapper"><p>無効なメールアドレスです。</p></div>';
         }
 
-        // データベースで確認
         global $wpdb;
         $table = $wpdb->prefix . SIMPLE_MAIL_STAND_PREFIX . 'main';
-        $user = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE email = %s", $email));
+        $query = "SELECT * FROM $table WHERE email = %s";
+        $user = $wpdb->get_row($wpdb->prepare($query, $email));
 
         if (!$user) {
             return '<div class="my-subscribe-wrapper"><p>このメールアドレスは登録されていません。</p></div>';
