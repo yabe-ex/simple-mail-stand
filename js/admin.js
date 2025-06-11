@@ -2,6 +2,10 @@ jQuery(document).ready(function ($) {
     // console.log('ajaxuxl: ' + admin.ajaxurl, admin.nonce);
 
     $('.mail-action').on('click', function () {
+        if (!confirm('ステータスを変更してもよろしいですか？')) {
+            return false;
+        }
+
         let mail_id = $(this).closest('tr').data('id'); // 親要素を遡って、最も近いtr要素
         let status = $(this).hasClass('stopped') ? 1 : 0;
         let element = $(this);

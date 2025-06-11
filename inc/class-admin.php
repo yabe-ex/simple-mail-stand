@@ -1,6 +1,22 @@
 <?php
 
 class SimpleMailStandAdmin {
+    private $settings = array();
+
+    /**
+     * コンストラクタ
+     * プラグイン設定をプロパティに保持
+     */
+    function __construct() {
+        $default_options = array(
+            'sender_name'     => '',
+            'sender_mail'     => '',
+            'signature'       => '',
+            'unsubscribe_url' => ''
+        );
+        $this->settings = get_option(SIMPLE_MAIL_STAND_PREFIX . 'settings', $default_options);
+    }
+
     function create_menu() {
         add_submenu_page(
             'edit.php?post_type=my-mail-magazine',
@@ -78,17 +94,11 @@ class SimpleMailStandAdmin {
             );
 
             update_option(SIMPLE_MAIL_STAND_PREFIX . 'settings', $options);
+
+            // プロパティを更新後の設定で上書き
+            $this->settings = $options;
             echo '<div class="notice notice-success"><p>設定を保存しました。</p></div>';
         }
-
-        $default_options = array(
-            'sender_name' => '',
-            'sender_mail' => '',
-            'signature'   => '',
-            'unsubscribe_url' => ''
-        );
-
-        $options = get_option(SIMPLE_MAIL_STAND_PREFIX . 'settings', $default_options);
 
 ?>
         <div class="wrap">
@@ -98,21 +108,21 @@ class SimpleMailStandAdmin {
                 <table class="form-table">
                     <tr>
                         <th>メール差出人</th>
-                        <td><input type="text" name="sender_name" class="regular-text" value="<?php echo esc_attr($options['sender_name']); ?>" placeholder="例: 山田太郎"></td>
+                        <td><input type="text" name="sender_name" class="regular-text" value="<?php echo esc_attr($this->settings['sender_name']); ?>" placeholder="例: 山田太郎"></td>
                     </tr>
                     <tr>
                         <th>差し出しメールアドレス</th>
-                        <td><input type="email" name="sender_mail" class="regular-text" value="<?php echo esc_attr($options['sender_mail']); ?>" placeholder="例: info@example.com"></td>
+                        <td><input type="email" name="sender_mail" class="regular-text" value="<?php echo esc_attr($this->settings['sender_mail']); ?>" placeholder="例: info@example.com"></td>
                     </tr>
                     <tr>
                         <th>署名（フッターメッセージ）</th>
                         <td>
-                            <textarea name="signature" class="large-text" rows="5"><?php echo esc_textarea($options['signature']); ?></textarea>
+                            <textarea name="signature" class="large-text" rows="5"><?php echo esc_textarea($this->settings['signature']); ?></textarea>
                         </td>
                     </tr>
-                    <tr><!-- 後半に追加する -->
+                    <tr>
                         <th>メルマガ解約ページ</th>
-                        <td><input type="text" name="unsubscribe_url" class="large-text" value="<?php echo esc_attr($options['unsubscribe_url']); ?>"></td>
+                        <td><input type="text" name="unsubscribe_url" class="large-text" value="<?php echo esc_attr($this->settings['unsubscribe_url']); ?>"></td>
                     </tr>
                 </table>
                 <p class="submit">
@@ -291,14 +301,6 @@ class SimpleMailStandAdmin {
             return;
         }
 
-        // 設定を取得
-        $default_options = array(
-            'sender_name' => 'sender',
-            'sender_mail' => 'sender@study.local',
-            'signature'   => ''
-        );
-        $settings = get_option(SIMPLE_MAIL_STAND_PREFIX . 'settings', $default_options);
-
         // メール形式を取得
         $mail_format = get_post_meta($post_id, SIMPLE_MAIL_STAND_PREFIX . 'mail_format', true);
         if (empty($mail_format)) {
@@ -308,7 +310,8 @@ class SimpleMailStandAdmin {
         // メール配信実行
         $success_count = 0;
         foreach ($subscribers as $subscriber) {
-            if ($this->send_single_mail($subscriber->email, $post, $mail_format, $settings)) {
+            // プロパティに保持した設定を渡す
+            if ($this->send_single_mail($subscriber->email, $post, $mail_format, $this->settings)) {
                 $success_count++;
             }
         }
@@ -325,7 +328,6 @@ class SimpleMailStandAdmin {
 
         if ($mail_format === 'html') {
             $headers[] = 'Content-Type: text/html';
-            //  $headers[] = 'Content-Type: text/html; charset=UTF-8'; //文字コード
         }
 
         $subject = $post->post_title;
@@ -349,22 +351,14 @@ class SimpleMailStandAdmin {
     }
 
     function insert_unsubscribe_link($content, $email, $mail_format) {
-        $default_options = array(
-            'sender_name' => 'sender',
-            'sender_mail' => 'sender@study.local',
-            'signature'   => '',
-            'unsubscribe_url' => ''
-        );
-
-        $settings = get_option(SIMPLE_MAIL_STAND_PREFIX . 'settings', $default_options);
-
-        if (!wp_http_validate_url($settings['unsubscribe_url'])) {
+        // プロパティに保持した設定を利用
+        if (!wp_http_validate_url($this->settings['unsubscribe_url'])) {
             return $content;
         }
 
-        $delimiter = (strpos($settings['unsubscribe_url'], '?') !== false) ? '&' : '?';
+        $delimiter = (strpos($this->settings['unsubscribe_url'], '?') !== false) ? '&' : '?';
 
-        $unsubscribe_url = $settings['unsubscribe_url'] . "{$delimiter}unsubscribe=" . urlencode($email);
+        $unsubscribe_url = $this->settings['unsubscribe_url'] . "{$delimiter}unsubscribe=" . urlencode($email);
 
         // デフォルトテキスト
         $default_text = 'このメールの配信を停止したい場合は、こちらのリンクをクリックしてください: ';
