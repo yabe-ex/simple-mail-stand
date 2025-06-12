@@ -47,7 +47,7 @@ class SimpleMailStandFront {
             <h3>ニュースレター購読</h3>
             <p>登録すると、お得な情報がメール配信されます。</p>
             <div class="my-subscribe-form">
-                <input type="email" name="email" placeholder="メールアドレスを入力" required="">
+                <input type="email" name="email" placeholder="メールアドレスを入力">
                 <button type="submit" class="register_email">登録</button>
             </div>
             <div class="my-subscribe-message" style="display: none;"></div>
