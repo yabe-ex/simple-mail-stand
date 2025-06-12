@@ -40,7 +40,7 @@ class SimpleMailStand {
 
         add_action('add_meta_boxes', array($admin, 'add_meta_boxes'));
         add_action('save_post', array($admin, 'save_delivery_meta'));
-        add_action('simple_mail_stand_send_newsletter', array($admin, 'execute_newsletter_delivery'));
+        add_action('hook_newsletter_delivery', array($admin, 'exec_newsletter_delivery'));
 
 
 

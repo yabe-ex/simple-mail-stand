@@ -60,7 +60,7 @@ class SimpleMailStandAdmin {
     }
 
     function plugin_action_links($links) {
-        $url = '<a href="' . esc_url(admin_url("/admin.php?page=simple-mail-stand")) . '">設定</a>';
+        $url = '<a href="' . esc_url(admin_url("/edit.php?post_type=my-mail-magazine&page=my-mail-magazine-settings")) . '">設定</a>';
         array_unshift($links, $url);
         return $links;
     }
@@ -73,11 +73,11 @@ class SimpleMailStandAdmin {
                 'add_new_item'  => '新規メルマガを作成',
                 'edit_item'     => 'メルマガを編集',
             ),
-            'public' => true,
-            'has_archive' => true,
+            'public' => false,
+            'show_ui' => true,
+            'has_archive' => false,
             'supports' => array('title', 'editor'),
             'menu_icon' => 'dashicons-email-alt',
-            'rewrite' => array('slug' => 'my-mail-magazine'),
             'show_in_rest' => false, // ブロックエディタを無効化
         );
 
@@ -262,7 +262,13 @@ class SimpleMailStandAdmin {
 
         // メール配信が要求された場合
         if (isset($_POST['send_newsletter']) && get_post_status($post_id) === 'publish') {
-            $this->schedule_newsletter_delivery($post_id);
+            $hook_name = 'hook_newsletter_delivery';
+
+            // 既存のスケジュールをクリア
+            wp_clear_scheduled_hook($hook_name, array($post_id));
+
+            // 即座に実行するためのスケジュール
+            wp_schedule_single_event(time(), $hook_name, array($post_id));
 
             // 成功メッセージを一時保存
             set_transient('mail_delivery_message_' . $post_id, 'メール配信を開始しました。', 30);
@@ -270,22 +276,9 @@ class SimpleMailStandAdmin {
     }
 
     /**
-     * メール配信をスケジュール
-     */
-    function schedule_newsletter_delivery($post_id) {
-        $hook_name = 'simple_mail_stand_send_newsletter';
-
-        // 既存のスケジュールをクリア
-        wp_clear_scheduled_hook($hook_name, array($post_id));
-
-        // 即座に実行するためのスケジュール
-        wp_schedule_single_event(time(), $hook_name, array($post_id));
-    }
-
-    /**
      * Cronイベント: メール配信実行
      */
-    function execute_newsletter_delivery($post_id) {
+    function exec_newsletter_delivery($post_id) {
         $post = get_post($post_id);
         if (!$post || $post->post_type !== 'my-mail-magazine' || $post->post_status !== 'publish') {
             return;
