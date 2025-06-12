@@ -5,39 +5,43 @@ class SimpleMailStandFront {
 
     function __construct() {
         $default_options = array(
-            'sender_name' => 'sender',
-            'sender_mail' => 'sender@study.local',
-            'signature'   => ''
+            'sender_name'  => 'sender',
+            'sender_email' => 'sender@study.local',
+            'signature'    => ''
         );
 
         $this->settings = get_option(SIMPLE_MAIL_STAND_PREFIX . 'settings', $default_options);
     }
 
     function front_enqueue() {
-        // if (!is_singular() || !has_shortcode(get_post()->post_content, 'my_subscribe_form')) {
-        //     return;
-        // }
-
         $version  = (defined('SIMPLE_MAIL_STAND_DEVELOP') && true === SIMPLE_MAIL_STAND_DEVELOP) ? time() : SIMPLE_MAIL_STAND_VERSION;
         $strategy = array('in_footer' => true, 'strategy'  => 'defer');
 
         wp_register_style(SIMPLE_MAIL_STAND_SLUG . '-front',  SIMPLE_MAIL_STAND_URL . '/css/front.css', array(), $version);
         wp_register_script(SIMPLE_MAIL_STAND_SLUG . '-front', SIMPLE_MAIL_STAND_URL . '/js/front.js', array('jquery'), $version, $strategy);
 
-        if (is_singular() && (has_shortcode(get_post()->post_content, 'my_subscribe_form') ||
-            has_shortcode(get_post()->post_content, 'my_unsubscribe_form'))) {
-            wp_enqueue_style(SIMPLE_MAIL_STAND_SLUG . '-front');
-            wp_enqueue_script(SIMPLE_MAIL_STAND_SLUG . '-front');
+        // if (is_singular() && (has_shortcode(get_post()->post_content, 'my_subscribe_form') ||
+        //     has_shortcode(get_post()->post_content, 'my_unsubscribe_form'))) {
+        //     wp_enqueue_style(SIMPLE_MAIL_STAND_SLUG . '-front');
+        //     wp_enqueue_script(SIMPLE_MAIL_STAND_SLUG . '-front');
 
-            $front = array(
-                'ajaxurl' => admin_url('admin-ajax.php'),
-                'nonce'   => wp_create_nonce(SIMPLE_MAIL_STAND_SLUG)
-            );
-            wp_localize_script(SIMPLE_MAIL_STAND_SLUG . '-front', 'front', $front);
-        }
+        //     $front = array(
+        //         'ajaxurl' => admin_url('admin-ajax.php'),
+        //         'nonce'   => wp_create_nonce(SIMPLE_MAIL_STAND_SLUG)
+        //     );
+        //     wp_localize_script(SIMPLE_MAIL_STAND_SLUG . '-front', 'front', $front);
+        // }
     }
 
     function my_subscribe_form() {
+        wp_enqueue_style(SIMPLE_MAIL_STAND_SLUG . '-front');
+        wp_enqueue_script(SIMPLE_MAIL_STAND_SLUG . '-front');
+
+        $front = array(
+            'ajaxurl' => admin_url('admin-ajax.php'),
+            'nonce'   => wp_create_nonce(SIMPLE_MAIL_STAND_SLUG)
+        );
+        wp_localize_script(SIMPLE_MAIL_STAND_SLUG . '-front', 'front', $front);
 ?>
         <div class="my-subscribe-wrapper">
             <h3>ニュースレター購読</h3>
@@ -164,7 +168,7 @@ class SimpleMailStandFront {
     function send_email($email) {
 
         $sender_name  = $this->settings['sender_name'];
-        $sender_email = $this->settings['sender_mail'];
+        $sender_email = $this->settings['sender_email'];
         $signature    = $this->settings['signature'];
 
         $headers = array(

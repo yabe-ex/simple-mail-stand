@@ -10,7 +10,7 @@ class SimpleMailStandAdmin {
     function __construct() {
         $default_options = array(
             'sender_name'     => '',
-            'sender_mail'     => '',
+            'sender_email'    => '',
             'signature'       => '',
             'unsubscribe_url' => ''
         );
@@ -87,9 +87,9 @@ class SimpleMailStandAdmin {
     function show_setting_page() {
         if (isset($_POST['save_settings']) && check_admin_referer(SIMPLE_MAIL_STAND_PREFIX . 'save_settings')) {
             $options = array(
-                'sender_name' => sanitize_text_field($_POST['sender_name']),
-                'sender_mail' => sanitize_email($_POST['sender_mail']),
-                'signature'   => sanitize_textarea_field($_POST['signature']),
+                'sender_name'     => sanitize_text_field($_POST['sender_name']),
+                'sender_email'    => sanitize_email($_POST['sender_email']),
+                'signature'       => sanitize_textarea_field($_POST['signature']),
                 'unsubscribe_url' => sanitize_url($_POST['unsubscribe_url'])
             );
 
@@ -100,6 +100,21 @@ class SimpleMailStandAdmin {
             echo '<div class="notice notice-success"><p>設定を保存しました。</p></div>';
         }
 
+        $default_options = array(
+            'sender_name'     => '',
+            'sender_email'    => '',
+            'signature'       => '',
+            'unsubscribe_url' => ''
+        );
+
+        // $settings = get_option(SIMPLE_MAIL_STAND_PREFIX . 'settings', $default_options);
+
+        $settings = wp_parse_args(
+            get_option(SIMPLE_MAIL_STAND_PREFIX . 'settings', array()),
+            $default_options
+        );
+
+
 ?>
         <div class="wrap">
             <h1>メルマガ設定</h1>
@@ -107,22 +122,22 @@ class SimpleMailStandAdmin {
                 <?php wp_nonce_field(SIMPLE_MAIL_STAND_PREFIX . 'save_settings'); ?>
                 <table class="form-table">
                     <tr>
-                        <th>メール差出人</th>
-                        <td><input type="text" name="sender_name" class="regular-text" value="<?php echo esc_attr($this->settings['sender_name']); ?>" placeholder="例: 山田太郎"></td>
+                        <th>差出人名</th>
+                        <td><input type="text" name="sender_name" class="regular-text" value="<?php echo esc_attr($settings['sender_name']); ?>" placeholder="例: 山田太郎"></td>
                     </tr>
                     <tr>
-                        <th>差し出しメールアドレス</th>
-                        <td><input type="email" name="sender_mail" class="regular-text" value="<?php echo esc_attr($this->settings['sender_mail']); ?>" placeholder="例: info@example.com"></td>
+                        <th>差出人メールアドレス</th>
+                        <td><input type="email" name="sender_email" class="regular-text" value="<?php echo esc_attr($settings['sender_email']); ?>" placeholder="例: info@example.com"></td>
                     </tr>
                     <tr>
-                        <th>署名（フッターメッセージ）</th>
+                        <th>署名</th>
                         <td>
-                            <textarea name="signature" class="large-text" rows="5"><?php echo esc_textarea($this->settings['signature']); ?></textarea>
+                            <textarea name="signature" class="large-text" rows="5"><?php echo esc_textarea($settings['signature']); ?></textarea>
                         </td>
                     </tr>
                     <tr>
                         <th>メルマガ解約ページ</th>
-                        <td><input type="text" name="unsubscribe_url" class="large-text" value="<?php echo esc_attr($this->settings['unsubscribe_url']); ?>"></td>
+                        <td><input type="text" name="unsubscribe_url" class="large-text" value="<?php echo esc_attr($settings['unsubscribe_url']); ?>"></td>
                     </tr>
                 </table>
                 <p class="submit">
@@ -312,7 +327,7 @@ class SimpleMailStandAdmin {
 
     function send_single_mail($email, $post, $mail_format, $settings) {
         $sender_name = $settings['sender_name'];
-        $sender_email = $settings['sender_mail'];
+        $sender_email = $settings['sender_email'];
         $signature = $settings['signature'];
 
         $headers = array(
