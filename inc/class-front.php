@@ -44,7 +44,7 @@ class SimpleMailStandFront {
         wp_localize_script(SIMPLE_MAIL_STAND_SLUG . '-front', 'front', $front);
 ?>
         <div class="my-subscribe-wrapper">
-            <h3>ニュースレター購読</h3>
+            <h3>メルマガ登録</h3>
             <p>登録すると、お得な情報がメール配信されます。</p>
             <div class="my-subscribe-form">
                 <input type="email" name="email" placeholder="メールアドレスを入力">
@@ -106,6 +106,14 @@ class SimpleMailStandFront {
 
         global $wpdb;
         $table  = $wpdb->prefix . SIMPLE_MAIL_STAND_PREFIX . 'main';
+
+        $sql   = "SELECT count(*) FROM $table WHERE email = %s";
+        $count = $wpdb->get_var($wpdb->prepare($sql, $email));
+
+        if ($count) {
+            wp_send_json_error(array('message' => 'すでに登録されています。'));
+        }
+
         $status = $wpdb->insert(
             $table,
             array(
@@ -117,11 +125,7 @@ class SimpleMailStandFront {
         );
 
         if (!$status) {
-            if (strpos($wpdb->last_error, 'Duplicate') !== false) {
-                wp_send_json_error(array('message' => 'このメールアドレスはすでに登録されています。'));
-            } else {
-                wp_send_json_error(array('message' => '登録に失敗しました。'));
-            }
+            wp_send_json_error(array('message' => '登録に失敗しました。'));
         }
 
         $this->send_email($email);

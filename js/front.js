@@ -2,7 +2,7 @@ jQuery(document).ready(function ($) {
     console.log('ajaxurl: ' + front.ajaxurl);
 
     $('.register_email').on('click', function (e) {
-        let email = $('input[name="email"]').val();
+        const email = $('input[name="email"]').val();
 
         if (!isValidEmail(email)) {
             alert('メールアドレスの形式が正しくありません。');
